@@ -2,30 +2,73 @@ module Subscription exposing (keyboardSubscription)
 
 import Model exposing (..)
 import Keyboard exposing (KeyCode)
-import Char
+import Char exposing (isUpper, isLower, isDigit)
 
 
 keyboardSubscription : Model -> Sub Msg
 keyboardSubscription model =
-    Keyboard.presses (toMessage model)
+    Keyboard.presses (transition model.editState)
 
 
-toMessage : Model -> KeyCode -> Msg
-toMessage model code =
-    case code of
-        13 ->
-            -- Enter
-            ChangeState Start
+transition : EditState -> KeyCode -> Msg
+transition state code =
+    let
+        chr =
+            Char.fromCode code
+    in
+        case ( state, code ) of
+            ( Start, 54 {- six -} ) ->
+                ChangeState AddNode
 
-        27 ->
-            -- Escape
-            ChangeState Start
+            ( Start, 55 {- seven -} ) ->
+                ChangeState SetFrom
 
-        54 ->
-            ChangeState AddingNode
+            ( Start, 50 {- two -} ) ->
+                ChangeState DelNode
 
-        55 ->
-            ChangeState AddingEdge
+            ( Start, 48 {- zero -} ) ->
+                ChangeState DelEdge
 
-        c ->
-            AddChar <| Char.fromCode c
+            ( Start, invalidCode ) ->
+                InvalidChar chr
+
+            ( AddNode, code ) ->
+                labelEditTransitions code chr
+
+            ( SetFrom, code ) ->
+                numberEditTransitions code chr
+
+            ( SetTo, code ) ->
+                numberEditTransitions code chr
+
+            ( SetLabel, code ) ->
+                labelEditTransitions code chr
+
+            ( DelNode, code ) ->
+                numberEditTransitions code chr
+
+            ( DelEdge, code ) ->
+                numberEditTransitions code chr
+
+
+textEdittingTransitions : (Char -> Bool) -> Int -> Char -> Msg
+textEdittingTransitions acceptableChar code chr =
+    Debug.log ""
+        <| if acceptableChar chr then
+            AddChar chr
+           else if code == 13 {- Enter -} then
+            ConfirmEdit
+           else if code == 96 {- ` -} || code == 126 {- ~ -} then
+            CancelEdit
+           else
+            InvalidChar chr
+
+
+labelEditTransitions : Int -> Char -> Msg
+labelEditTransitions =
+    textEdittingTransitions (\c -> isUpper c || isLower c || isDigit c || c == ' ')
+
+
+numberEditTransitions : Int -> Char -> Msg
+numberEditTransitions =
+    textEdittingTransitions isDigit
