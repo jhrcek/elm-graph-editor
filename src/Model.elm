@@ -1,4 +1,4 @@
-module Model exposing (init, update, Model, Msg(..), EditState(..))
+module Model exposing (init, update, Model, Msg(..), EditState(..), parseNodeId)
 
 import Graph as G
 import IntDict
@@ -14,7 +14,8 @@ type alias Model =
     { graph : Gr
     , nextNodeId : Int
     , editState : EditState
-    , labelBuffer : String
+    , inputBuffer : String
+    , nodeIdBuffer : List Int
     , inputError : Maybe String
     }
 
@@ -34,7 +35,6 @@ type EditState
 type Msg
     = ChangeState EditState
     | AddChar Char
-    | AddDigit Int
       -- Confirming input
     | ConfirmNodeLabel
     | ConfirmFrom
@@ -45,9 +45,18 @@ type Msg
       -- When we can't move to next state
     | InputError String
 
+
 init : ( Model, Cmd a )
 init =
-    ( Model G.empty 0 Start "" Nothing, Cmd.none )
+    ( { graph = G.empty
+      , nextNodeId = 0
+      , editState = Start
+      , inputBuffer = ""
+      , nodeIdBuffer = []
+      , inputError = Nothing
+      }
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,46 +70,59 @@ updateModel msg model =
         ChangeState st ->
             { model
                 | editState = st
-                , labelBuffer = ""
+                , inputBuffer = ""
                 , inputError = Nothing
             }
 
         AddChar chr ->
             { model
-                | labelBuffer = model.labelBuffer ++ fromChar chr
+                | inputBuffer = model.inputBuffer ++ fromChar chr
                 , inputError = Nothing
             }
 
-        AddDigit dig ->
-            { model | inputError = Nothing }
-
         ConfirmNodeLabel ->
             { model
-                | graph = addNode model.nextNodeId model.labelBuffer model.graph
+                | graph = addNode model.nextNodeId model.inputBuffer model.graph
                 , nextNodeId = model.nextNodeId + 1
                 , editState = Start
-                , labelBuffer = ""
+                , inputBuffer = ""
                 , inputError = Nothing
             }
 
         ConfirmFrom ->
-            model
+            { model
+                | nodeIdBuffer = [ parseNodeId model.inputBuffer ]
+                , editState = SetTo
+                , inputBuffer = ""
+                , inputError = Nothing
+            }
 
         ConfirmTo ->
-            model
+            { model
+                | nodeIdBuffer = model.nodeIdBuffer ++ [ parseNodeId model.inputBuffer ]
+                , editState = SetLabel
+                , inputBuffer = ""
+                , inputError = Nothing
+            }
 
         ConfirmEdgeLabel ->
-            { model | editState = Start, inputError = Nothing }
+            { model
+                | graph = addEdge model.nodeIdBuffer model.inputBuffer model.graph
+                , editState = Start
+                , inputBuffer = ""
+                , nodeIdBuffer = []
+                , inputError = Nothing
+            }
 
         CancelEdit ->
             { model
                 | editState = Start
-                , labelBuffer = ""
+                , inputBuffer = ""
                 , inputError = Nothing
             }
 
         InputError err ->
-            { model | inputError = Just err, labelBuffer = "" }
+            { model | inputError = Just err, inputBuffer = "" }
 
 
 addNode : G.NodeId -> String -> Gr -> Gr
@@ -110,3 +132,28 @@ addNode nid label =
         , incoming = IntDict.empty
         , outgoing = IntDict.empty
         }
+
+
+addEdge : List G.NodeId -> String -> Gr -> Gr
+addEdge nodeIds edgeLabel =
+    case nodeIds of
+        [ from, to ] ->
+            G.update from (updateOutgoing to edgeLabel)
+
+        unexpected ->
+            Debug.crash <| "There should habe been 2 node IDs but there are " ++ toString unexpected
+
+
+updateOutgoing : G.NodeId -> String -> Maybe (G.NodeContext String String) -> Maybe (G.NodeContext String String)
+updateOutgoing toId edgeLabel maybeContext =
+    case maybeContext of
+        Nothing ->
+            Nothing
+
+        Just { incoming, node, outgoing } ->
+            Just { node = node, incoming = incoming, outgoing = IntDict.insert toId edgeLabel outgoing }
+
+
+parseNodeId : String -> G.NodeId
+parseNodeId =
+    Result.withDefault 0 << String.toInt

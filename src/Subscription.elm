@@ -11,7 +11,6 @@ keyboardSubscription : Model -> Sub Msg
 keyboardSubscription model =
     Keyboard.presses (transition model)
 
-
 transition : Model -> KeyCode -> Msg
 transition model code =
     let
@@ -39,21 +38,29 @@ transition model code =
                     labelEditTransitions ConfirmNodeLabel code chr
 
                 ( SetFrom, 13 {- Enter -} ) ->
-                    if String.isEmpty model.labelBuffer then
+                    if String.isEmpty model.inputBuffer then
                         InputError "You must enter ID of the edge's starting node"
-                    else if not <| Graph.member (parseNodeId model.labelBuffer) model.graph then
+                    else if not <| Graph.member (parseNodeId model.inputBuffer) model.graph then
                         InputError
                             <| "The node with ID "
-                            ++ toString (parseNodeId model.labelBuffer)
+                            ++ toString (parseNodeId model.inputBuffer)
                             ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
                     else
-                        ChangeState SetTo
+                        ConfirmFrom
 
                 ( SetFrom, code ) ->
                     numberEditTransitions ConfirmFrom code chr
 
                 ( SetTo, 13 {- Enter -} ) ->
-                    ChangeState SetLabel
+                    if String.isEmpty model.inputBuffer then
+                        InputError "You must enter ID of the edge's ending node"
+                    else if not <| Graph.member (parseNodeId model.inputBuffer) model.graph then
+                        InputError
+                            <| "The node with ID "
+                            ++ toString (parseNodeId model.inputBuffer)
+                            ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
+                    else
+                        ConfirmTo
 
                 ( SetTo, code ) ->
                     numberEditTransitions ConfirmTo code chr
@@ -68,11 +75,6 @@ transition model code =
                 ( DelEdge, code ) ->
                     --TODO deletion confirmation
                     numberEditTransitions ConfirmTo code chr
-
-
-parseNodeId : String -> Graph.NodeId
-parseNodeId =
-    Result.withDefault 0 << String.toInt
 
 
 textEdittingTransitions : (Char -> Bool) -> Msg -> Int -> Char -> Msg

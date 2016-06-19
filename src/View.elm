@@ -23,11 +23,11 @@ view m =
             ]
         ]
 
-
 editStatus : Model -> Html Msg
 editStatus m =
     div []
-        [ div [] [ text <| "Char buffer:" ++ m.labelBuffer ]
+        [ div [] [ text <| "Char buffer: " ++ m.inputBuffer ]
+        , div [] [ text <| "Node Id buffer: " ++ toString m.nodeIdBuffer]
         , div [ style "color:red;" ]
             [ m.inputError
                 |> Maybe.withDefault ""

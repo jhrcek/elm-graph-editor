@@ -5,7 +5,6 @@ import Model
 import View
 import Subscription
 
-
 main : Program Never
 main =
     Html.App.program
