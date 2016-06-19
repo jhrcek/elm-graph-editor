@@ -1,74 +1,102 @@
 module Subscription exposing (keyboardSubscription)
 
-import Model exposing (..)
-import Keyboard exposing (KeyCode)
 import Char exposing (isUpper, isLower, isDigit)
+import Graph
+import Keyboard exposing (KeyCode)
+import String
+import Model exposing (..)
 
 
 keyboardSubscription : Model -> Sub Msg
 keyboardSubscription model =
-    Keyboard.presses (transition model.editState)
+    Keyboard.presses (transition model)
 
 
-transition : EditState -> KeyCode -> Msg
-transition state code =
+transition : Model -> KeyCode -> Msg
+transition model code =
     let
         chr =
             Char.fromCode code
     in
-        case ( state, code ) of
-            ( Start, 54 {- six -} ) ->
-                ChangeState AddNode
+        Debug.log "transition: "
+            <| case ( model.editState, code ) of
+                ( Start, 54 {- six -} ) ->
+                    ChangeState AddNode
 
-            ( Start, 55 {- seven -} ) ->
-                ChangeState SetFrom
+                ( Start, 55 {- seven -} ) ->
+                    ChangeState SetFrom
 
-            ( Start, 50 {- two -} ) ->
-                ChangeState DelNode
+                ( Start, 50 {- two -} ) ->
+                    ChangeState DelNode
 
-            ( Start, 48 {- zero -} ) ->
-                ChangeState DelEdge
+                ( Start, 48 {- zero -} ) ->
+                    ChangeState DelEdge
 
-            ( Start, invalidCode ) ->
-                InvalidChar chr
+                ( Start, code ) ->
+                    invalidCharacter code chr
 
-            ( AddNode, code ) ->
-                labelEditTransitions code chr
+                ( AddNode, code ) ->
+                    labelEditTransitions ConfirmNodeLabel code chr
 
-            ( SetFrom, code ) ->
-                numberEditTransitions code chr
+                ( SetFrom, 13 {- Enter -} ) ->
+                    if String.isEmpty model.labelBuffer then
+                        InputError "You must enter ID of the edge's starting node"
+                    else if not <| Graph.member (parseNodeId model.labelBuffer) model.graph then
+                        InputError
+                            <| "The node with ID "
+                            ++ toString (parseNodeId model.labelBuffer)
+                            ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
+                    else
+                        ChangeState SetTo
 
-            ( SetTo, code ) ->
-                numberEditTransitions code chr
+                ( SetFrom, code ) ->
+                    numberEditTransitions ConfirmFrom code chr
 
-            ( SetLabel, code ) ->
-                labelEditTransitions code chr
+                ( SetTo, 13 {- Enter -} ) ->
+                    ChangeState SetLabel
 
-            ( DelNode, code ) ->
-                numberEditTransitions code chr
+                ( SetTo, code ) ->
+                    numberEditTransitions ConfirmTo code chr
 
-            ( DelEdge, code ) ->
-                numberEditTransitions code chr
+                ( SetLabel, code ) ->
+                    labelEditTransitions ConfirmEdgeLabel code chr
 
+                ( DelNode, code ) ->
+                    --TODO deletion confirmation
+                    numberEditTransitions ConfirmTo code chr
 
-textEdittingTransitions : (Char -> Bool) -> Int -> Char -> Msg
-textEdittingTransitions acceptableChar code chr =
-    Debug.log ""
-        <| if acceptableChar chr then
-            AddChar chr
-           else if code == 13 {- Enter -} then
-            ConfirmEdit
-           else if code == 96 {- ` -} || code == 126 {- ~ -} then
-            CancelEdit
-           else
-            InvalidChar chr
+                ( DelEdge, code ) ->
+                    --TODO deletion confirmation
+                    numberEditTransitions ConfirmTo code chr
 
 
-labelEditTransitions : Int -> Char -> Msg
+parseNodeId : String -> Graph.NodeId
+parseNodeId =
+    Result.withDefault 0 << String.toInt
+
+
+textEdittingTransitions : (Char -> Bool) -> Msg -> Int -> Char -> Msg
+textEdittingTransitions acceptableChar confirmationMessage code chr =
+    if acceptableChar chr then
+        AddChar chr
+    else if code == 13 {- Enter -} then
+        confirmationMessage
+    else if code == 96 {- ` -} || code == 126 {- ~ -} then
+        CancelEdit
+    else
+        invalidCharacter code chr
+
+
+labelEditTransitions : Msg -> Int -> Char -> Msg
 labelEditTransitions =
     textEdittingTransitions (\c -> isUpper c || isLower c || isDigit c || c == ' ')
 
 
-numberEditTransitions : Int -> Char -> Msg
+numberEditTransitions : Msg -> Int -> Char -> Msg
 numberEditTransitions =
     textEdittingTransitions isDigit
+
+
+invalidCharacter : Int -> Char -> Msg
+invalidCharacter code chr =
+    InputError <| "The character '" ++ String.fromChar chr ++ "' (ASCII code " ++ toString code ++ ") is invalid in this state"

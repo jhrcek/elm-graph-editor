@@ -1,12 +1,12 @@
 module View exposing (view)
 
 import Html exposing (..)
+import Maybe
+import Graph
 import Svg exposing (Svg, circle, g, text', tspan, polygon, path)
 import Svg.Attributes exposing (width, height, viewBox, r, dx, cx, cy, x, y, stroke, fill, textAnchor, strokeWidth, style, transform, points, d)
-import Model exposing (..)
-import Maybe
-import String
 
+import Model exposing (..)
 
 view : Model -> Html Msg
 view m =
@@ -14,8 +14,12 @@ view m =
         [ div []
             [ h1 [] [ text "Graph editor" ]
             , div [] [ text "Start adding nodes by pressing 6" ]
-            , stateAutomaton m.editState
-            , editStatus m
+            , div [] [ stateAutomaton m.editState ]
+            , div [] [ editStatus m ]
+            , hr [] []
+            , h2 [] [ text "Graph preview" ]
+            , div [] [ text <| "Nodes " ++ (toString <| Graph.nodes m.graph) ]
+            , div [] [ text <| "Edges " ++ (toString <| Graph.edges m.graph) ]
             ]
         ]
 
@@ -23,14 +27,14 @@ view m =
 editStatus : Model -> Html Msg
 editStatus m =
     div []
-        [ div [] [ text <| "Char buffer:" ++ m.charBuffer ]
+        [ div [] [ text <| "Char buffer:" ++ m.labelBuffer ]
         , div [ style "color:red;" ]
-            [ m.invalidChar
-                |> Maybe.map (\c -> "The character '" ++ String.fromChar c ++ "' is invalid in this state")
+            [ m.inputError
                 |> Maybe.withDefault ""
                 |> text
             ]
         ]
+
 
 stateAutomaton : EditState -> Svg Msg
 stateAutomaton st =
