@@ -11,6 +11,7 @@ keyboardSubscription : Model -> Sub Msg
 keyboardSubscription model =
     Keyboard.presses (transition model)
 
+
 transition : Model -> KeyCode -> Msg
 transition model code =
     let
@@ -34,67 +35,57 @@ transition model code =
                 ( Start, code ) ->
                     invalidCharacter code chr
 
+                ( AddNode, 13 ) ->
+                    ConfirmNodeLabel
+
                 ( AddNode, code ) ->
-                    labelEditTransitions ConfirmNodeLabel code chr
+                    labelEditTransitions code chr
 
                 ( SetFrom, 13 {- Enter -} ) ->
-                    if String.isEmpty model.inputBuffer then
-                        InputError "You must enter ID of the edge's starting node"
-                    else if not <| Graph.member (parseNodeId model.inputBuffer) model.graph then
-                        InputError
-                            <| "The node with ID "
-                            ++ toString (parseNodeId model.inputBuffer)
-                            ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
-                    else
-                        ConfirmFrom
+                    ensureNodeIdExists model.inputBuffer "the edge's starting node" model.graph (always ConfirmFrom)
 
                 ( SetFrom, code ) ->
-                    numberEditTransitions ConfirmFrom code chr
+                    numberEditTransitions code chr
 
                 ( SetTo, 13 {- Enter -} ) ->
-                    if String.isEmpty model.inputBuffer then
-                        InputError "You must enter ID of the edge's ending node"
-                    else if not <| Graph.member (parseNodeId model.inputBuffer) model.graph then
-                        InputError
-                            <| "The node with ID "
-                            ++ toString (parseNodeId model.inputBuffer)
-                            ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
-                    else
-                        ConfirmTo
+                    ensureNodeIdExists model.inputBuffer "the edge's ending node" model.graph (always ConfirmTo)
 
                 ( SetTo, code ) ->
-                    numberEditTransitions ConfirmTo code chr
+                    numberEditTransitions code chr
+
+                ( SetLabel, 13 ) ->
+                    ConfirmNodeLabel
 
                 ( SetLabel, code ) ->
-                    labelEditTransitions ConfirmEdgeLabel code chr
+                    labelEditTransitions code chr
 
-                ( DelNode, code ) ->
-                    --TODO deletion confirmation
-                    numberEditTransitions ConfirmTo code chr
+                ( DelNode, 13 {- Enter -} ) ->
+                    ensureNodeIdExists model.inputBuffer "the edge's ending node" model.graph ConfirmNodeDeletion
+
+                ( DelNode, code {- Enter -} ) ->
+                    numberEditTransitions code chr
 
                 ( DelEdge, code ) ->
                     --TODO deletion confirmation
-                    numberEditTransitions ConfirmTo code chr
+                    numberEditTransitions code chr
 
 
-textEdittingTransitions : (Char -> Bool) -> Msg -> Int -> Char -> Msg
-textEdittingTransitions acceptableChar confirmationMessage code chr =
+textEdittingTransitions : (Char -> Bool) -> Int -> Char -> Msg
+textEdittingTransitions acceptableChar code chr =
     if acceptableChar chr then
         AddChar chr
-    else if code == 13 {- Enter -} then
-        confirmationMessage
     else if code == 96 {- ` -} || code == 126 {- ~ -} then
         CancelEdit
     else
         invalidCharacter code chr
 
 
-labelEditTransitions : Msg -> Int -> Char -> Msg
+labelEditTransitions : Int -> Char -> Msg
 labelEditTransitions =
     textEdittingTransitions (\c -> isUpper c || isLower c || isDigit c || c == ' ')
 
 
-numberEditTransitions : Msg -> Int -> Char -> Msg
+numberEditTransitions : Int -> Char -> Msg
 numberEditTransitions =
     textEdittingTransitions isDigit
 
@@ -102,3 +93,20 @@ numberEditTransitions =
 invalidCharacter : Int -> Char -> Msg
 invalidCharacter code chr =
     InputError <| "The character '" ++ String.fromChar chr ++ "' (ASCII code " ++ toString code ++ ") is invalid in this state"
+
+
+ensureNodeIdExists : String -> String -> Gr -> (Int -> Msg) -> Msg
+ensureNodeIdExists potentialNodeId errorOnEmptyStr graph tagOnSuccess =
+    let
+        parsedId =
+            parseNodeId potentialNodeId
+    in
+        if String.isEmpty potentialNodeId then
+            InputError <| "You must enter ID of " ++ errorOnEmptyStr
+        else if not <| Graph.member parsedId graph then
+            InputError
+                <| "The node with ID "
+                ++ toString parsedId
+                ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
+        else
+            tagOnSuccess parsedId

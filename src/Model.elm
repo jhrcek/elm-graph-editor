@@ -1,4 +1,4 @@
-module Model exposing (init, update, Model, Msg(..), EditState(..), parseNodeId)
+module Model exposing (init, update, Model, Msg(..), Gr, EditState(..), parseNodeId)
 
 import Graph as G
 import IntDict
@@ -42,6 +42,8 @@ type Msg
       -- Cancelling
     | ConfirmEdgeLabel
     | CancelEdit
+      -- Deleting
+    | ConfirmNodeDeletion G.NodeId
       -- When we can't move to next state
     | InputError String
 
@@ -122,7 +124,18 @@ updateModel msg model =
             }
 
         InputError err ->
-            { model | inputError = Just err, inputBuffer = "" }
+            { model
+                | inputError = Just err
+                , inputBuffer = ""
+            }
+
+        ConfirmNodeDeletion nodeId ->
+            { model
+                | graph = G.remove nodeId model.graph
+                , editState = Start
+                , inputError = Nothing
+                , inputBuffer = ""
+            }
 
 
 addNode : G.NodeId -> String -> Gr -> Gr

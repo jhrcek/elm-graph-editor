@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
-    "summary": "Keyboard based UI for creating and editting graphs",
-    "repository": "https://github.com/user/project.git",
+    "summary": "Keyboard-centered UI for rapid entry of graph-structured data",
+    "repository": "https://github.com/jhrcek/elm-graph-editor.git",
     "license": "BSD3",
     "source-directories": [
         "src"
