@@ -54,7 +54,7 @@ transition model code =
                     numberEditTransitions code chr
 
                 ( SetLabel, 13 ) ->
-                    ConfirmNodeLabel
+                    ConfirmEdgeLabel
 
                 ( SetLabel, code ) ->
                     labelEditTransitions code chr
