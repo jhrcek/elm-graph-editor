@@ -7,7 +7,7 @@ A simple browser-based graph editor written in [Elm](http://elm-lang.org/). It i
 1. [Install Elm](http://elm-lang.org/install)
 2. Clone this repository: `git clone git@github.com:jhrcek/elm-graph-editor.git`
 3. `cd elm-graph-editor`
-4. `elm make src/Main.elm --output=js/elm-graph-editor.js`
+4. `elm make src/Main.elm --warn --output=js/elm-graph-editor.js`
 5. Open the file `elm-graph-editor.html` in your browser
 
 ## Upcoming improvements

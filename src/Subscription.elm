@@ -42,13 +42,13 @@ transition model code =
                     labelEditTransitions code chr
 
                 ( SetFrom, 13 {- Enter -} ) ->
-                    ensureNodeIdExists model.inputBuffer "the edge's starting node" model.graph (always ConfirmFrom)
+                    ensureNodeIdExists model.inputBuffer "the edge's starting node" model.graph ConfirmFrom
 
                 ( SetFrom, code ) ->
                     numberEditTransitions code chr
 
                 ( SetTo, 13 {- Enter -} ) ->
-                    ensureNodeIdExists model.inputBuffer "the edge's ending node" model.graph (always ConfirmTo)
+                    ensureNodeIdExists model.inputBuffer "the edge's ending node" model.graph ConfirmTo
 
                 ( SetTo, code ) ->
                     numberEditTransitions code chr
@@ -60,7 +60,7 @@ transition model code =
                     labelEditTransitions code chr
 
                 ( DelNode, 13 {- Enter -} ) ->
-                    ensureNodeIdExists model.inputBuffer "the edge's ending node" model.graph ConfirmNodeDeletion
+                    ensureNodeIdExists model.inputBuffer "a node to delete" model.graph ConfirmNodeDeletion
 
                 ( DelNode, code {- Enter -} ) ->
                     numberEditTransitions code chr
@@ -110,3 +110,8 @@ ensureNodeIdExists potentialNodeId errorOnEmptyStr graph tagOnSuccess =
                 ++ " does not exist in this graph. You must enter ID of one of the existing nodes"
         else
             tagOnSuccess parsedId
+
+
+parseNodeId : String -> Graph.NodeId
+parseNodeId =
+    Result.withDefault 0 << String.toInt

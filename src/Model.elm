@@ -1,4 +1,4 @@
-module Model exposing (init, update, Model, Msg(..), Gr, EditState(..), parseNodeId)
+module Model exposing (init, update, Model, Msg(..), Gr, EditState(..))
 
 import Graph as G
 import IntDict
@@ -38,8 +38,8 @@ type Msg
     | AddChar Char
       -- Confirming input
     | ConfirmNodeLabel
-    | ConfirmFrom
-    | ConfirmTo
+    | ConfirmFrom G.NodeId
+    | ConfirmTo G.NodeId
       -- Cancelling
     | ConfirmEdgeLabel
     | CancelEdit
@@ -69,7 +69,8 @@ update msg model =
             ( updateModel msg model, Vis.addNode (Vis.mkVisNode model.nextNodeId model.inputBuffer) )
 
         ConfirmEdgeLabel ->
-          (updateModel msg model, Vis.addEdge (Vis.mkVisEdge model.nodeIdBuffer model.inputBuffer))
+            ( updateModel msg model, Vis.addEdge (Vis.mkVisEdge model.nodeIdBuffer model.inputBuffer) )
+
         _ ->
             ( updateModel msg model, Cmd.none )
 
@@ -99,17 +100,17 @@ updateModel msg model =
                 , inputError = Nothing
             }
 
-        ConfirmFrom ->
+        ConfirmFrom fromId ->
             { model
-                | nodeIdBuffer = [ parseNodeId model.inputBuffer ]
+                | nodeIdBuffer = [ fromId ]
                 , editState = SetTo
                 , inputBuffer = ""
                 , inputError = Nothing
             }
 
-        ConfirmTo ->
+        ConfirmTo toId ->
             { model
-                | nodeIdBuffer = model.nodeIdBuffer ++ [ parseNodeId model.inputBuffer ]
+                | nodeIdBuffer = model.nodeIdBuffer ++ [ toId ]
                 , editState = SetLabel
                 , inputBuffer = ""
                 , inputError = Nothing
@@ -173,8 +174,3 @@ updateOutgoing toId edgeLabel maybeContext =
 
         Just { incoming, node, outgoing } ->
             Just { node = node, incoming = incoming, outgoing = IntDict.insert toId edgeLabel outgoing }
-
-
-parseNodeId : String -> G.NodeId
-parseNodeId =
-    Result.withDefault 0 << String.toInt
