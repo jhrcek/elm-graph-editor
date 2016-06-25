@@ -9,6 +9,7 @@ import Svg.Attributes exposing (width, height, viewBox, r, dx, cx, cy, x, y, str
 
 import Model exposing (..)
 
+
 view : Model -> Html Msg
 view m =
     div []
@@ -22,13 +23,15 @@ view m =
                 [ tr []
                     [ td [ A.class "bordered" ] [ stateAutomaton m.editState ]
                     , td [ A.class "bordered", A.id "vis-container" ] []
+                    , td [ A.class "bordered", A.style [ ( "vertical-align", "top" ), ( "padding", "50px" ) ] ]
+                        [ h3 [] [ text "Editor model" ]
+                        , div [] [ editStatus m ]
+                        , h3 [] [ text "Graph data" ]
+                        , div [] [ text <| "Nodes " ++ (toString <| Graph.nodes m.graph) ]
+                        , div [] [ text <| "Edges " ++ (toString <| Graph.edges m.graph) ]
+                        ]
                     ]
                 ]
-            , div [] [ editStatus m ]
-            , hr [] []
-            , h2 [] [ text "Graph data" ]
-            , div [] [ text <| "Nodes " ++ (toString <| Graph.nodes m.graph) ]
-            , div [] [ text <| "Edges " ++ (toString <| Graph.edges m.graph) ]
             ]
         ]
 

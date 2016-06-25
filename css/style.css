@@ -2,11 +2,10 @@ html, head, body {
     padding: 0;
     margin: 0;
 }
-
 body {
     font-family: calibri, helvetica, arial, sans-serif;
 }
-
 .bordered {
-  border: 1px solid #d3d3d3;
+    border: 1px solid #d3d3d3;
+    min-width: 350px;
 }
