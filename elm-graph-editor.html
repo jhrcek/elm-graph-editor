@@ -27,13 +27,20 @@
             };
             var options = {
                 width: '600px',
-                height: '400px'
+                height: '400px',
+                edges: {
+                    arrows: 'to'
+                }
             };
             var network = new vis.Network(container, data, options);
 
             // Elm ports setup
             app.ports.addNode.subscribe(function(node) {
                 nodes.add(node);
+            });
+
+            app.ports.addEdge.subscribe(function(edge) {
+                edges.add(edge);
             });
         }
 

@@ -68,6 +68,8 @@ update msg model =
         ConfirmNodeLabel ->
             ( updateModel msg model, Vis.addNode (Vis.mkVisNode model.nextNodeId model.inputBuffer) )
 
+        ConfirmEdgeLabel ->
+          (updateModel msg model, Vis.addEdge (Vis.mkVisEdge model.nodeIdBuffer model.inputBuffer))
         _ ->
             ( updateModel msg model, Cmd.none )
 
