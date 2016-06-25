@@ -1,6 +1,7 @@
 module View exposing (view)
 
 import Html exposing (..)
+import Html.Attributes as A
 import Maybe
 import Graph
 import Svg exposing (Svg, circle, g, text', tspan, polygon, path)
@@ -13,20 +14,30 @@ view m =
     div []
         [ div []
             [ h1 [] [ text "Graph editor" ]
-            , div [] [ text "Start adding nodes by pressing 6" ]
-            , div [] [ stateAutomaton m.editState ]
+            , h3 [] [ text "What is this good for?" ]
+            , div [] [ text "TODO" ]
+            , h3 [] [ text "What is Elm?" ]
+            , div [] [ text "TODO" ]
+            , table []
+                [ tr []
+                    [ td [ A.class "bordered" ] [ stateAutomaton m.editState ]
+                    , td [ A.class "bordered", A.id "vis-container" ] []
+                    ]
+                ]
             , div [] [ editStatus m ]
             , hr [] []
-            , h2 [] [ text "Graph preview" ]
+            , h2 [] [ text "Graph data" ]
             , div [] [ text <| "Nodes " ++ (toString <| Graph.nodes m.graph) ]
             , div [] [ text <| "Edges " ++ (toString <| Graph.edges m.graph) ]
             ]
         ]
 
+
+
 editStatus : Model -> Html Msg
 editStatus m =
     div []
-        [ div [] [ text <| "Char buffer: " ++ m.inputBuffer ]
+        [ div [] [ text <| "Input buffer: " ++ m.inputBuffer ]
         , div [] [ text <| "Node Id buffer: " ++ toString m.nodeIdBuffer]
         , div [ style "color:red;" ]
             [ m.inputError

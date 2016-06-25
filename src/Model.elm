@@ -4,6 +4,7 @@ import Graph as G
 import IntDict
 import Platform.Cmd as Cmd
 import String exposing (fromChar)
+import Vis
 
 
 type alias Gr =
@@ -63,7 +64,12 @@ init =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( updateModel msg model, Cmd.none )
+    case msg of
+        ConfirmNodeLabel ->
+            ( updateModel msg model, Vis.addNode (Vis.mkVisNode model.nextNodeId model.inputBuffer) )
+
+        _ ->
+            ( updateModel msg model, Cmd.none )
 
 
 updateModel : Msg -> Model -> Model
