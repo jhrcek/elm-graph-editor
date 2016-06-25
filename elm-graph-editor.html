@@ -38,7 +38,9 @@
             app.ports.addNode.subscribe(function(node) {
                 nodes.add(node);
             });
-
+            app.ports.removeNode.subscribe(function(nodeId) {
+                nodes.remove(nodeId);
+            });
             app.ports.addEdge.subscribe(function(edge) {
                 edges.add(edge);
             });

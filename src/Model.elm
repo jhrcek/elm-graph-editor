@@ -64,15 +64,22 @@ init =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        ConfirmNodeLabel ->
-            ( updateModel msg model, Vis.addNode (Vis.mkVisNode model.nextNodeId model.inputBuffer) )
+    let
+        newModel =
+            updateModel msg model
+    in
+        case msg of
+            ConfirmNodeLabel ->
+                ( newModel, Vis.addNode (Vis.mkVisNode model.nextNodeId model.inputBuffer) )
 
-        ConfirmEdgeLabel ->
-            ( updateModel msg model, Vis.addEdge (Vis.mkVisEdge model.nodeIdBuffer model.inputBuffer) )
+            ConfirmEdgeLabel ->
+                ( newModel, Vis.addEdge (Vis.mkVisEdge model.nodeIdBuffer model.inputBuffer) )
 
-        _ ->
-            ( updateModel msg model, Cmd.none )
+            ConfirmNodeDeletion nodeId ->
+                ( newModel, Vis.removeNode nodeId )
+
+            _ ->
+                ( newModel, Cmd.none )
 
 
 updateModel : Msg -> Model -> Model
