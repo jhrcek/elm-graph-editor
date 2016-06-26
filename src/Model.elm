@@ -1,4 +1,4 @@
-module Model exposing (init, update, Model, Msg(..), Gr, EditState(..))
+module Model exposing (init, update, Model, Msg(..), Gr, EditState(..), Format(..))
 
 import Graph as G
 import IntDict
@@ -18,6 +18,7 @@ type alias Model =
     , inputBuffer : String
     , nodeIdBuffer : List Int
     , inputError : Maybe String
+    , format : Format
     }
 
 
@@ -33,8 +34,15 @@ type EditState
     | DelEdge
 
 
+type Format
+    = ElmGraph
+    | Dot
+    | Tgf
+
+
 type Msg
-    = ChangeState EditState
+    = ChangeFormat Format
+    | ChangeState EditState
     | AddChar Char
       -- Confirming input
     | ConfirmNodeLabel
@@ -57,6 +65,7 @@ init =
       , inputBuffer = ""
       , nodeIdBuffer = []
       , inputError = Nothing
+      , format = ElmGraph
       }
     , Cmd.none
     )
@@ -85,6 +94,9 @@ update msg model =
 updateModel : Msg -> Model -> Model
 updateModel msg model =
     case msg of
+        ChangeFormat fmt ->
+            { model | format = fmt }
+
         ChangeState st ->
             { model
                 | editState = st

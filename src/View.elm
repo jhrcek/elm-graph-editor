@@ -2,23 +2,19 @@ module View exposing (view)
 
 import Html exposing (..)
 import Html.Attributes as A
+import Html.Events as E
 import Maybe
-import Graph
 import Svg exposing (Svg, circle, g, text', tspan, polygon, path)
 import Svg.Attributes exposing (width, height, viewBox, r, dx, cx, cy, x, y, stroke, fill, textAnchor, strokeWidth, style, transform, points, d)
 
 import Model exposing (..)
-
+import GraphFormatter
 
 view : Model -> Html Msg
 view m =
     div []
         [ div []
             [ h1 [] [ text "Graph editor" ]
-            , h3 [] [ text "What is this good for?" ]
-            , div [] [ text "TODO" ]
-            , h3 [] [ text "What is Elm?" ]
-            , div [] [ text "TODO" ]
             , table []
                 [ tr []
                     [ td [ A.class "bordered" ] [ stateAutomaton m.editState ]
@@ -26,14 +22,34 @@ view m =
                     , td [ A.class "bordered", A.style [ ( "vertical-align", "top" ), ( "padding", "50px" ) ] ]
                         [ h3 [] [ text "Editor model" ]
                         , div [] [ editStatus m ]
-                        , h3 [] [ text "Graph data" ]
-                        , div [] [ text <| "Nodes " ++ (toString <| Graph.nodes m.graph) ]
-                        , div [] [ text <| "Edges " ++ (toString <| Graph.edges m.graph) ]
+                        , graphData m
                         ]
                     ]
                 ]
             ]
         ]
+
+
+
+graphData : Model -> Html Msg
+graphData { format, graph } =
+    let
+        radio txt isChecked format =
+            label []
+                [ input [ A.type' "radio", A.name "format", A.checked isChecked, E.onCheck (always <| ChangeFormat format) ] []
+                , text txt
+                ]
+    in
+        div []
+            [ h3 [] [ text "Graph data" ]
+            , div []
+                [ text "Format: "
+                , radio "elm-graph" True ElmGraph
+                , radio "dot" False Dot
+                , radio "tgf" False Tgf
+                ]
+            , div [] [ text <| GraphFormatter.formatGraph format graph ]
+            ]
 
 
 
