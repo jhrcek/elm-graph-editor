@@ -30,7 +30,6 @@ view m =
         ]
 
 
-
 graphData : Model -> Html Msg
 graphData { format, graph } =
     let
@@ -48,9 +47,14 @@ graphData { format, graph } =
                 , radio "dot" False Dot
                 , radio "tgf" False Tgf
                 ]
-            , div [] [ text <| GraphFormatter.formatGraph format graph ]
+            , textarea
+                [ A.value <| GraphFormatter.formatGraph format graph
+                , A.rows 12
+                , A.cols 50
+                , A.readonly True
+                ]
+                []
             ]
-
 
 
 editStatus : Model -> Html Msg

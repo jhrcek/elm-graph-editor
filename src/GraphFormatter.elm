@@ -1,6 +1,10 @@
 module GraphFormatter exposing (formatGraph)
 
+import Graph
+import List
+import String
 import Model exposing (..)
+
 
 formatGraph : Format -> Gr -> String
 formatGraph format graph =
@@ -16,13 +20,22 @@ formatGraph format graph =
 
 
 toTgf : Gr -> String
-toTgf _ =
-    "TODO tgf"
+toTgf g =
+    let
+        ns =
+            Graph.nodes g
+                |> List.map (\{ id, label } -> toString id ++ " " ++ label)
+
+        es =
+            Graph.edges g
+                |> List.map (\{ from, to, label } -> toString from ++ " " ++ toString to ++ " " ++ label)
+    in
+        String.join "\n" <| ns ++ [ "#" ] ++ es
 
 
 toElmGraph : Gr -> String
 toElmGraph =
-    toString
+    Graph.toString'
 
 
 toDot : Gr -> String
