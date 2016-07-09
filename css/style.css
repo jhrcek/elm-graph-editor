@@ -7,5 +7,5 @@ body {
 }
 .bordered {
     border: 1px solid #d3d3d3;
-    min-width: 350px;
+    min-width: 200px;
 }

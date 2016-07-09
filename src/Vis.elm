@@ -17,20 +17,13 @@ type alias VisEdge =
 
 
 mkVisNode : Int -> String -> VisNode
-mkVisNode nId nLabel =
-    { id = nId
-    , label = nLabel
-    }
+mkVisNode =
+    VisNode
 
 
-mkVisEdge : List Int -> String -> VisEdge
-mkVisEdge ids label =
-    case ids of
-        [ from, to ] ->
-            { from = from, to = to, label = label }
-
-        unexpected ->
-            Debug.crash <| "There should habe been 2 node IDs but there are " ++ toString unexpected
+mkVisEdge : Int -> Int -> String -> VisEdge
+mkVisEdge =
+    VisEdge
 
 
 port addNode : VisNode -> Cmd msg
