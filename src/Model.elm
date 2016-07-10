@@ -1,4 +1,4 @@
-module Model exposing (init, update, GraphEvent(..), Format(..), Gr, GraphEvents, Model, Msg(..), Node, Edge)
+module Model exposing (init, update, subscriptions, GraphEvent(..), Format(..), Gr, GraphEvents, Model, Msg(..), Node, Edge)
 
 import Platform.Cmd as Cmd
 import Graph as G
@@ -53,6 +53,7 @@ type Msg
     | AddingEdge Form.Msg
     | RemoveEdge
     | ChangeFormat Format
+    | NodeSelected G.NodeId
 
 
 type alias Model =
@@ -132,6 +133,14 @@ update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm } as mo
 
         ChangeFormat fmt ->
             { model | format = fmt } ! []
+
+        NodeSelected nid ->
+            model ! []
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Vis.nodeSelected NodeSelected
 
 
 
