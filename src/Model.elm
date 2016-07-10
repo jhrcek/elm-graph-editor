@@ -51,7 +51,7 @@ type Format
 type Msg
     = AddingNode Form.Msg
     | AddingEdge Form.Msg
-    | RemoveEdge
+    | RemoveNode
     | ChangeFormat Format
     | NodeSelected G.NodeId
 
@@ -63,6 +63,7 @@ type alias Model =
     , format : Format
     , addNodeForm : Form () Node
     , addEdgeForm : Form () Edge
+    , selectedNode : Maybe G.NodeId
     }
 
 
@@ -81,13 +82,14 @@ init =
       , format = ElmGraph
       , addNodeForm = initAddNodeForm 0
       , addEdgeForm = initAddEdgeForm 0 G.empty
+      , selectedNode = Nothing
       }
     , Cmd.none
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm } as model) =
+update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm, selectedNode } as model) =
     case msg of
         AddingNode formMsg ->
             case ( formMsg, Form.getOutput addNodeForm ) of
@@ -115,12 +117,15 @@ update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm } as mo
                     let
                         newGraph =
                             addEdge newEdge graph
+
+                        newGraphEvents =
+                            D.insert gens.eventUid (AddEdgeEvent newEdge) graphEvents
                     in
                         { model
                             | graph = newGraph
                             , addEdgeForm = initAddEdgeForm (gens.edgeUid + 1) newGraph
                             , gens = IdGenerators gens.nodeUid (gens.edgeUid + 1) (gens.eventUid + 1)
-                            , graphEvents = D.insert gens.eventUid (AddEdgeEvent newEdge) graphEvents
+                            , graphEvents = newGraphEvents
                         }
                             ! [ Vis.addEdge (Vis.mkVisEdge newEdge.from newEdge.to newEdge.label) ]
 
@@ -128,14 +133,32 @@ update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm } as mo
                     { model | addEdgeForm = Form.update formMsg addEdgeForm }
                         ! []
 
-        RemoveEdge ->
-            model ! []
+        RemoveNode ->
+            case selectedNode of
+                Nothing ->
+                    model ! []
+
+                Just nid ->
+                    let
+                        newGraph =
+                            G.remove nid graph
+
+                        newGraphEvents =
+                            D.insert gens.eventUid (RemoveNodeEvent nid) graphEvents
+                    in
+                        { model
+                            | graph = newGraph
+                            , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
+                            , graphEvents = newGraphEvents
+                            , selectedNode = Nothing
+                        }
+                            ! [ Vis.removeNode nid ]
 
         ChangeFormat fmt ->
             { model | format = fmt } ! []
 
         NodeSelected nid ->
-            model ! []
+            { model | selectedNode = Just nid } ! []
 
 
 subscriptions : Model -> Sub Msg

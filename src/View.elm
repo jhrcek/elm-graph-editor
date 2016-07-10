@@ -20,14 +20,10 @@ view m =
             , table []
                 [ tr []
                     [ td [ class "bordered" ]
-                        [ Html.App.map AddingNode (addNodeFormView m.addNodeForm)
-                        , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingNode <| dumpErrors m.addNodeForm ]
-                        , Html.App.map AddingEdge (addEdgeFormView m.addEdgeForm)
-                        , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingEdge <| dumpErrors m.addEdgeForm ]
-                        ]
+                        [ inputForm m ]
                     , td [ class "bordered", id "vis-container" ]
                         []
-                    , td [ class "bordered", style [ ( "vertical-align", "top" ), ( "padding", "50px" ) ] ]
+                    , td [ class "bordered", style [ ( "vertical-align", "top" ), ( "padding", "20px" ) ] ]
                         [ graphData m ]
                     ]
                 ]
@@ -35,6 +31,29 @@ view m =
           --        , modelDebug m
         , graphEventsView m.graphEvents
         ]
+
+
+inputForm : Model -> Html Msg
+inputForm m =
+    let
+        selectedNodeControls =
+            case m.selectedNode of
+                Nothing ->
+                    text ""
+
+                Just nid ->
+                    pureForm "Remove node"
+                        [ pureControlGroup "selected node" (input [ type' "text", disabled True, size 3, value (toString nid) ] [])
+                        , pureControls [ pureButton "Remove" RemoveNode ]
+                        ]
+    in
+        div []
+            [ Html.App.map AddingNode (addNodeFormView m.addNodeForm)
+            , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingNode <| dumpErrors m.addNodeForm ]
+            , selectedNodeControls
+            , Html.App.map AddingEdge (addEdgeFormView m.addEdgeForm)
+            , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingEdge <| dumpErrors m.addEdgeForm ]
+            ]
 
 
 graphData : Model -> Html Msg
@@ -86,43 +105,32 @@ graphEventsView events =
 
 addNodeFormView : Form () Node -> Html Form.Msg
 addNodeFormView form =
-    div [ class "pure-form pure-form-aligned" ]
-        [ fieldset []
-            [ legend [] [ text "Node" ]
-            , controlGroup "id"
-                <| textInput (Form.getFieldAsString "nid" form) [ disabled True, size 3 ]
-            , controlGroup "label"
-                <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-            , controlGroup "definition"
-                <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-            , div [ class "pure-controls" ]
-                [ button [ class "pure-button pure-button-primary", E.onClick Form.Submit ]
-                    [ text "Add" ]
-                ]
-            ]
+    pureForm "Node"
+        [ pureControlGroup "id"
+            <| textInput (Form.getFieldAsString "nid" form) [ disabled True, size 3 ]
+        , pureControlGroup "label"
+            <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
+        , pureControlGroup "definition"
+            <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
+        , div [ class "pure-controls" ]
+            [ pureButton "Add" Form.Submit ]
         ]
 
 
 addEdgeFormView : Form () Edge -> Html Form.Msg
 addEdgeFormView form =
-    div [ class "pure-form pure-form-aligned" ]
-        [ fieldset []
-            [ legend [] [ text "Edge" ]
-            , controlGroup "id"
-                <| textInput (Form.getFieldAsString "eid" form) [ disabled True, size 3 ]
-            , controlGroup "from"
-                <| textInput (Form.getFieldAsString "from" form) [ size 3 ]
-            , controlGroup "to"
-                <| textInput (Form.getFieldAsString "to" form) [ size 3 ]
-            , controlGroup "label"
-                <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-            , controlGroup "definition"
-                <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-            , div [ class "pure-controls" ]
-                [ button [ class "pure-button pure-button-primary", E.onClick Form.Submit ]
-                    [ text "Add" ]
-                ]
-            ]
+    pureForm "Edge"
+        [ pureControlGroup "id"
+            <| textInput (Form.getFieldAsString "eid" form) [ disabled True, size 3 ]
+        , pureControlGroup "from"
+            <| textInput (Form.getFieldAsString "from" form) [ size 3 ]
+        , pureControlGroup "to"
+            <| textInput (Form.getFieldAsString "to" form) [ size 3 ]
+        , pureControlGroup "label"
+            <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
+        , pureControlGroup "definition"
+            <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
+        , pureControls [ pureButton "Add" Form.Submit ]
         ]
 
 
@@ -130,9 +138,28 @@ addEdgeFormView form =
 -- private Pure stuff
 
 
-controlGroup : String -> Html a -> Html a
-controlGroup fieldLabel fieldInput =
+pureButton : String -> a -> Html a
+pureButton label tagger =
+    button [ class "pure-button pure-button-primary", E.onClick tagger ]
+        [ text label ]
+
+
+pureControlGroup : String -> Html a -> Html a
+pureControlGroup fieldLabel fieldInput =
     div [ class "pure-control-group" ]
         [ label [] [ text fieldLabel ]
         , fieldInput
+        ]
+
+
+pureControls : List (Html a) -> Html a
+pureControls =
+    div [ class "pure-controls" ]
+
+
+pureForm : String -> List (Html a) -> Html a
+pureForm fieldsetLabel children =
+    div [ class "pure-form pure-form-aligned" ]
+        [ fieldset []
+            ([ legend [] [ text fieldsetLabel ] ] ++ children)
         ]
