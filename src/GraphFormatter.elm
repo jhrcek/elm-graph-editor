@@ -39,5 +39,20 @@ toElmGraph =
 
 
 toDot : Gr -> String
-toDot _ =
-    "TODO dot"
+toDot g =
+    let
+        showLabel label =
+            if String.isEmpty label then
+                ";"
+            else
+                " [label=" ++ label ++ "];"
+
+        ns =
+            Graph.nodes g
+                |> List.map (\{ id, label } -> String.padLeft 4 ' ' <| toString id ++ showLabel label)
+
+        es =
+            Graph.edges g
+                |> List.map (\{ from, to, label } -> String.padLeft 4 ' ' <| toString from ++ " -> " ++ toString to ++ showLabel label)
+    in
+        String.join "\n" ("digraph {" :: ns ++ es ++ [ "}" ])
