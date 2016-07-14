@@ -1,4 +1,4 @@
-port module Vis exposing (addNode, mkVisNode, addEdge, mkVisEdge, removeNode, nodeSelected)
+port module Vis exposing (addNode, mkVisNode, addEdge, mkVisEdge, removeNode, nodeSelected, edgeSelected)
 
 import Graph
 
@@ -10,7 +10,8 @@ type alias VisNode =
 
 
 type alias VisEdge =
-    { from : Int
+    { id : Int
+    , from : Int
     , to : Int
     , label : String
     }
@@ -21,7 +22,7 @@ mkVisNode =
     VisNode
 
 
-mkVisEdge : Int -> Int -> String -> VisEdge
+mkVisEdge : Int -> Int -> Int -> String -> VisEdge
 mkVisEdge =
     VisEdge
 
@@ -36,3 +37,5 @@ port addEdge : VisEdge -> Cmd msg
 
 
 port nodeSelected : (Graph.NodeId -> msg) -> Sub msg
+
+port edgeSelected : (Int -> msg) -> Sub msg

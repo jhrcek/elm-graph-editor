@@ -53,7 +53,9 @@ type Msg
     | AddingEdge Form.Msg
     | RemoveNode
     | ChangeFormat Format
+      -- Graph interaction
     | NodeSelected G.NodeId
+    | EdgeSelected Int
 
 
 type alias Model =
@@ -64,6 +66,7 @@ type alias Model =
     , addNodeForm : Form () Node
     , addEdgeForm : Form () Edge
     , selectedNode : Maybe G.NodeId
+    , selectedEdge : Maybe Int
     }
 
 
@@ -83,6 +86,7 @@ init =
       , addNodeForm = initAddNodeForm 0
       , addEdgeForm = initAddEdgeForm 0 G.empty
       , selectedNode = Nothing
+      , selectedEdge = Nothing
       }
     , Cmd.none
     )
@@ -127,7 +131,7 @@ update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm, select
                             , gens = IdGenerators gens.nodeUid (gens.edgeUid + 1) (gens.eventUid + 1)
                             , graphEvents = newGraphEvents
                         }
-                            ! [ Vis.addEdge (Vis.mkVisEdge newEdge.from newEdge.to newEdge.label) ]
+                            ! [ Vis.addEdge (Vis.mkVisEdge newEdge.eid newEdge.from newEdge.to newEdge.label) ]
 
                 _ ->
                     { model | addEdgeForm = Form.update formMsg addEdgeForm }
@@ -158,12 +162,18 @@ update msg ({ graph, graphEvents, gens, format, addNodeForm, addEdgeForm, select
             { model | format = fmt } ! []
 
         NodeSelected nid ->
-            { model | selectedNode = Just nid } ! []
+            { model | selectedNode = Just nid, selectedEdge = Nothing } ! []
+
+        EdgeSelected eid ->
+            { model | selectedEdge = Just eid, selectedNode = Nothing } ! []
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Vis.nodeSelected NodeSelected
+    Sub.batch
+        [ Vis.nodeSelected NodeSelected
+        , Vis.edgeSelected EdgeSelected
+        ]
 
 
 
