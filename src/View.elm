@@ -103,7 +103,7 @@ graphEventsView events =
         ]
 
 
-addNodeFormView : Form () Node -> Html Form.Msg
+addNodeFormView : Form () NodeData -> Html Form.Msg
 addNodeFormView form =
     pureForm "Node"
         [ pureControlGroup "id"
@@ -117,7 +117,7 @@ addNodeFormView form =
         ]
 
 
-addEdgeFormView : Form () Edge -> Html Form.Msg
+addEdgeFormView : Form () EdgeData -> Html Form.Msg
 addEdgeFormView form =
     pureForm "Edge"
         [ pureControlGroup "id"

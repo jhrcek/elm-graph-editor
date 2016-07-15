@@ -1,4 +1,4 @@
-module Model exposing (init, update, subscriptions, GraphEvent(..), Format(..), Gr, GraphEvents, Model, Msg(..), Node, Edge)
+module Model exposing (init, update, subscriptions, GraphEvent(..), Format(..), Gr, GraphEvents, Model, Msg(..), NodeData, EdgeData)
 
 import Platform.Cmd as Cmd
 import Graph as G
@@ -12,31 +12,39 @@ import Form.Validate exposing (Validation, get, oneOf, string, emptyString, int,
 
 
 type alias Gr =
-    G.Graph String String
+    G.Graph NodeData EdgeData
 
 
 type alias GraphEvents =
     D.Dict Int GraphEvent
 
 
+type alias EdgeId =
+    Int
+
+
+
+-- Graph library has concept of NodeId, but not EdgeId
+
+
 type GraphEvent
-    = AddNodeEvent Node
-    | AddEdgeEvent Edge
+    = AddNodeEvent NodeData
+    | AddEdgeEvent EdgeData
     | RemoveNodeEvent Int
     | RemoveEdgeEvent Int
 
 
-type alias Node =
-    { nid : Int
+type alias NodeData =
+    { nid : G.NodeId
     , label : String
     , definition : String
     }
 
 
-type alias Edge =
-    { eid : Int
-    , from : Int
-    , to : Int
+type alias EdgeData =
+    { eid : EdgeId
+    , from : G.NodeId
+    , to : G.NodeId
     , label : String
     , definition : String
     }
@@ -63,10 +71,10 @@ type alias Model =
     , graphEvents : GraphEvents
     , gens : IdGenerators
     , format : Format
-    , addNodeForm : Form () Node
-    , addEdgeForm : Form () Edge
+    , addNodeForm : Form () NodeData
+    , addEdgeForm : Form () EdgeData
     , selectedNode : Maybe G.NodeId
-    , selectedEdge : Maybe Int
+    , selectedEdge : Maybe EdgeId
     }
 
 
@@ -180,28 +188,28 @@ subscriptions _ =
 -- Graph helpers
 
 
-addNode : Node -> Gr -> Gr
-addNode { nid, label } =
+addNode : NodeData -> Gr -> Gr
+addNode ({ nid, label, definition } as ndata) =
     G.insert
-        { node = G.Node nid label
+        { node = G.Node nid ndata
         , incoming = IntDict.empty
         , outgoing = IntDict.empty
         }
 
 
-addEdge : Edge -> Gr -> Gr
-addEdge { from, to, label } =
-    G.update from (updateOutgoing to label)
+addEdge : EdgeData -> Gr -> Gr
+addEdge ({ eid, from, to, label, definition } as edata) =
+    G.update from (updateOutgoing to edata)
 
 
-updateOutgoing : G.NodeId -> String -> Maybe (G.NodeContext String String) -> Maybe (G.NodeContext String String)
-updateOutgoing toId edgeLabel maybeContext =
+updateOutgoing : G.NodeId -> EdgeData -> Maybe (G.NodeContext NodeData EdgeData) -> Maybe (G.NodeContext NodeData EdgeData)
+updateOutgoing toId edgeData maybeContext =
     maybeContext
         `Maybe.andThen` \{ incoming, node, outgoing } ->
                             Just
                                 { node = node
                                 , incoming = incoming
-                                , outgoing = IntDict.insert toId edgeLabel outgoing
+                                , outgoing = IntDict.insert toId edgeData outgoing
                                 }
 
 
@@ -209,25 +217,25 @@ updateOutgoing toId edgeLabel maybeContext =
 -- Forms
 
 
-initAddNodeForm : Int -> Form () Node
+initAddNodeForm : Int -> Form () NodeData
 initAddNodeForm initialNodeId =
     Form.initial [ ( "nid", Field.Text (toString initialNodeId) ) ] validateAddNode
 
 
-initAddEdgeForm : Int -> Gr -> Form () Edge
+initAddEdgeForm : Int -> Gr -> Form () EdgeData
 initAddEdgeForm initialEdgeId graph =
     Form.initial [ ( "eid", Field.Text (toString initialEdgeId) ) ] (validateAddEdge graph)
 
 
-validateAddNode : Validation () Node
+validateAddNode : Validation () NodeData
 validateAddNode =
-    form3 Node
+    form3 NodeData
         (get "nid" int)
         (get "label" anyString)
         (get "definition" anyString)
 
 
-validateAddEdge : Gr -> Validation () Edge
+validateAddEdge : Gr -> Validation () EdgeData
 validateAddEdge graph =
     let
         nodeIdExistsInGraph =
@@ -240,7 +248,7 @@ validateAddEdge graph =
                         Err NotIncludedIn
                 )
     in
-        form5 Edge
+        form5 EdgeData
             (get "eid" int)
             (get "from" nodeIdExistsInGraph)
             (get "to" nodeIdExistsInGraph)

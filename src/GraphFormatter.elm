@@ -24,11 +24,11 @@ toTgf g =
     let
         ns =
             Graph.nodes g
-                |> List.map (\{ id, label } -> toString id ++ " " ++ label)
+                |> List.map (\{ id, label } -> toString id ++ " " ++ label.label)
 
         es =
             Graph.edges g
-                |> List.map (\{ from, to, label } -> toString from ++ " " ++ toString to ++ " " ++ label)
+                |> List.map (\{ from, to, label } -> toString from ++ " " ++ toString to ++ " " ++ label.label)
     in
         String.join "\n" <| ns ++ [ "#" ] ++ es
 
@@ -49,10 +49,10 @@ toDot g =
 
         ns =
             Graph.nodes g
-                |> List.map (\{ id, label } -> String.padLeft 4 ' ' <| toString id ++ showLabel label)
+                |> List.map (\{ id, label } -> String.padLeft 4 ' ' <| toString id ++ showLabel label.label)
 
         es =
             Graph.edges g
-                |> List.map (\{ from, to, label } -> String.padLeft 4 ' ' <| toString from ++ " -> " ++ toString to ++ showLabel label)
+                |> List.map (\{ from, to, label } -> String.padLeft 4 ' ' <| toString from ++ " -> " ++ toString to ++ showLabel label.label)
     in
         String.join "\n" ("digraph {" :: ns ++ es ++ [ "}" ])
