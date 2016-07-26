@@ -28,32 +28,18 @@ view m =
                     ]
                 ]
             ]
-          --        , modelDebug m
+        , modelDebug m
         , graphEventsView m.graphEvents
         ]
 
 
 inputForm : Model -> Html Msg
 inputForm m =
-    let
-        selectedNodeControls =
-            case m.selectedNode of
-                Nothing ->
-                    text ""
-
-                Just nid ->
-                    pureForm "Remove node"
-                        [ pureControlGroup "selected node" (input [ type' "text", disabled True, size 3, value (toString nid) ] [])
-                        , pureControls [ pureButton "Remove" RemoveNode ]
-                        ]
-    in
-        div []
-            [ Html.App.map AddingNode (addNodeFormView m.addNodeForm)
-            , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingNode <| dumpErrors m.addNodeForm ]
-            , selectedNodeControls
-            , Html.App.map AddingEdge (addEdgeFormView m.addEdgeForm)
-            , div [ style [ ( "color", "red" ) ] ] [ Html.App.map AddingEdge <| dumpErrors m.addEdgeForm ]
-            ]
+    div []
+        [ Html.App.map NodeFormMsg (nodeFormView (m.selectedNode /= Nothing) m.nodeForm)
+        , Html.App.map EdgeFormMsg (edgeFormView m.edgeForm)
+        , div [ style [ ( "color", "red" ) ] ] [ Html.App.map EdgeFormMsg <| dumpErrors m.edgeForm ]
+        ]
 
 
 graphData : Model -> Html Msg
@@ -103,34 +89,38 @@ graphEventsView events =
         ]
 
 
-addNodeFormView : Form () NodeData -> Html Form.Msg
-addNodeFormView form =
+nodeFormView : Bool -> Form () NodeData -> Html Form.Msg
+nodeFormView nodeSelected form =
     pureForm "Node"
-        [ pureControlGroup "id"
+        [ pureControlGroup nodeSelected "id"
             <| textInput (Form.getFieldAsString "nid" form) [ disabled True, size 3 ]
-        , pureControlGroup "label"
+        , pureControlGroup True "label"
             <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-        , pureControlGroup "definition"
+        , pureControlGroup True "definition"
             <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
         , div [ class "pure-controls" ]
-            [ pureButton "Add" Form.Submit ]
+            [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
+            , pureButton nodeSelected "Delete" (Form.Focus "Delete")
+            , pureButton nodeSelected "Update" (Form.Focus "Update")
+            , pureButton nodeSelected "Clear" (Form.Focus "Clear")
+            ]
         ]
 
 
-addEdgeFormView : Form () EdgeData -> Html Form.Msg
-addEdgeFormView form =
+edgeFormView : Form () EdgeData -> Html Form.Msg
+edgeFormView form =
     pureForm "Edge"
-        [ pureControlGroup "id"
+        [ pureControlGroup True "id"
             <| textInput (Form.getFieldAsString "eid" form) [ disabled True, size 3 ]
-        , pureControlGroup "from"
+        , pureControlGroup True "from"
             <| textInput (Form.getFieldAsString "from" form) [ size 3 ]
-        , pureControlGroup "to"
+        , pureControlGroup True "to"
             <| textInput (Form.getFieldAsString "to" form) [ size 3 ]
-        , pureControlGroup "label"
+        , pureControlGroup True "label"
             <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-        , pureControlGroup "definition"
+        , pureControlGroup True "definition"
             <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-        , pureControls [ pureButton "Add" Form.Submit ]
+        , pureControls [ pureButton True "Add" Form.Submit ]
         ]
 
 
@@ -138,17 +128,34 @@ addEdgeFormView form =
 -- private Pure stuff
 
 
-pureButton : String -> a -> Html a
-pureButton label tagger =
-    button [ class "pure-button pure-button-primary", E.onClick tagger ]
+pureButton : Bool -> String -> a -> Html a
+pureButton visible label tagger =
+    button
+        [ visibility visible
+        , class "pure-button"
+        , E.onClick tagger
+        ]
         [ text label ]
 
 
-pureControlGroup : String -> Html a -> Html a
-pureControlGroup fieldLabel fieldInput =
-    div [ class "pure-control-group" ]
+pureControlGroup : Bool -> String -> Html a -> Html a
+pureControlGroup visible fieldLabel fieldInput =
+    div
+        [ visibility visible
+        , class "pure-control-group"
+        ]
         [ label [] [ text fieldLabel ]
         , fieldInput
+        ]
+
+
+visibility : Bool -> Attribute msg
+visibility visible =
+    style
+        [ if visible then
+            ( "visibility", "visible" )
+          else
+            ( "display", "none" )
         ]
 
 

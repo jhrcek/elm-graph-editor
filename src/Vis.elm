@@ -38,4 +38,5 @@ port addEdge : VisEdge -> Cmd msg
 
 port nodeSelected : (Graph.NodeId -> msg) -> Sub msg
 
+
 port edgeSelected : (Int -> msg) -> Sub msg
