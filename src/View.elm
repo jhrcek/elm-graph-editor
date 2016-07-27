@@ -36,8 +36,8 @@ view m =
 inputForm : Model -> Html Msg
 inputForm m =
     div []
-        [ Html.App.map NodeFormMsg (nodeFormView (m.selectedNode /= Nothing) m.nodeForm)
-        , Html.App.map EdgeFormMsg (edgeFormView m.edgeForm)
+        [ Html.App.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
+        , Html.App.map EdgeFormMsg <| edgeFormView (m.selectedEdge /= Nothing) m.edgeForm
         , div [ style [ ( "color", "red" ) ] ] [ Html.App.map EdgeFormMsg <| dumpErrors m.edgeForm ]
         ]
 
@@ -92,25 +92,25 @@ graphEventsView events =
 nodeFormView : Bool -> Form () NodeData -> Html Form.Msg
 nodeFormView nodeSelected form =
     pureForm "Node"
-        [ pureControlGroup nodeSelected "id"
+        [ pureControlGroup nodeSelected "Selected node"
             <| textInput (Form.getFieldAsString "nid" form) [ disabled True, size 3 ]
         , pureControlGroup True "label"
             <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
         , pureControlGroup True "definition"
             <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-        , div [ class "pure-controls" ]
+        , pureControls
             [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
             , pureButton nodeSelected "Delete" (Form.Focus "Delete")
             , pureButton nodeSelected "Update" (Form.Focus "Update")
-            , pureButton nodeSelected "Clear" (Form.Focus "Clear")
+            , pureButton nodeSelected "Unselect" (Form.Focus "Unselect")
             ]
         ]
 
 
-edgeFormView : Form () EdgeData -> Html Form.Msg
-edgeFormView form =
+edgeFormView : Bool -> Form () EdgeData -> Html Form.Msg
+edgeFormView edgeElected form =
     pureForm "Edge"
-        [ pureControlGroup True "id"
+        [ pureControlGroup edgeElected "Selected edge"
             <| textInput (Form.getFieldAsString "eid" form) [ disabled True, size 3 ]
         , pureControlGroup True "from"
             <| textInput (Form.getFieldAsString "from" form) [ size 3 ]
@@ -120,7 +120,12 @@ edgeFormView form =
             <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
         , pureControlGroup True "definition"
             <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-        , pureControls [ pureButton True "Add" Form.Submit ]
+        , pureControls
+            [ pureButton (not edgeElected) "Add" (Form.Focus "Add")
+            , pureButton edgeElected "Delete" (Form.Focus "Delete")
+            , pureButton edgeElected "Update" (Form.Focus "Update")
+            , pureButton edgeElected "Unselect" (Form.Focus "Unselect")
+            ]
         ]
 
 
