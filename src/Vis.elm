@@ -49,14 +49,11 @@ port nodeSelected : (Graph.NodeId -> msg) -> Sub msg
 port edgeSelected : (Int -> msg) -> Sub msg
 
 
-
--- () because ports MUST have at least one input arg
-
-
 port unselectAll_ : () -> Cmd msg
 
 
 
+-- () because ports MUST have at least one input arg
 -- declare helper to avoid having to call it with ()
 
 

@@ -104,12 +104,15 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
                     let
                         newGraph =
                             addNode newNode graph
+
+                        newNodeUid =
+                            gens.nodeUid + 1
                     in
                         { model
                             | graph = newGraph
-                            , nodeForm = initNodeForm (gens.nodeUid + 1) "" ""
+                            , nodeForm = initNodeForm newNodeUid "" ""
                             , edgeForm = initEdgeForm gens.edgeUid "" "" "" "" newGraph
-                            , gens = IdGenerators (gens.nodeUid + 1) gens.edgeUid (gens.eventUid + 1)
+                            , gens = IdGenerators newNodeUid gens.edgeUid (gens.eventUid + 1)
                             , graphEvents = D.insert gens.eventUid (AddNodeEvent newNode) graphEvents
                         }
                             ! [ Vis.addNode (Vis.mkVisNode newNode.nid newNode.label) ]
@@ -151,11 +154,15 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
                     let
                         newGraph =
                             addEdge newEdge graph
+
+                        newEdgeUid =
+                            gens.edgeUid + 1
                     in
                         { model
                             | graph = newGraph
-                            , edgeForm = initEdgeForm (gens.edgeUid + 1) "" "" "" "" newGraph
-                            , gens = IdGenerators gens.nodeUid (gens.edgeUid + 1) (gens.eventUid + 1)
+                            , nodeForm = initNodeForm gens.nodeUid "" ""
+                            , edgeForm = initEdgeForm newEdgeUid "" "" "" "" newGraph
+                            , gens = IdGenerators gens.nodeUid newEdgeUid (gens.eventUid + 1)
                             , graphEvents = D.insert gens.eventUid (AddEdgeEvent newEdge) graphEvents
                         }
                             ! [ Vis.addEdge (Vis.mkVisEdge newEdge.eid newEdge.from newEdge.to newEdge.label) ]

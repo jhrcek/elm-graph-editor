@@ -28,7 +28,7 @@ view m =
                     ]
                 ]
             ]
-        , modelDebug m
+          --, modelDebug m
         , graphEventsView m.graphEvents
         ]
 
@@ -38,7 +38,6 @@ inputForm m =
     div []
         [ Html.App.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
         , Html.App.map EdgeFormMsg <| edgeFormView (m.selectedEdge /= Nothing) m.edgeForm
-        , div [ style [ ( "color", "red" ) ] ] [ Html.App.map EdgeFormMsg <| dumpErrors m.edgeForm ]
         ]
 
 
@@ -91,42 +90,80 @@ graphEventsView events =
 
 nodeFormView : Bool -> Form () NodeData -> Html Form.Msg
 nodeFormView nodeSelected form =
-    pureForm "Node"
-        [ pureControlGroup nodeSelected "Selected node"
-            <| textInput (Form.getFieldAsString "nid" form) [ disabled True, size 3 ]
-        , pureControlGroup True "label"
-            <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-        , pureControlGroup True "definition"
-            <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-        , pureControls
-            [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
-            , pureButton nodeSelected "Delete" (Form.Focus "Delete")
-            , pureButton nodeSelected "Update" (Form.Focus "Update")
-            , pureButton nodeSelected "Unselect" (Form.Focus "Unselect")
+    let
+        nid =
+            Form.getFieldAsString "nid" form
+
+        label =
+            Form.getFieldAsString "label" form
+
+        definition =
+            Form.getFieldAsString "definition" form
+    in
+        pureForm "Node"
+            [ pureControlGroup nodeSelected "Selected node"
+                <| textInput nid [ disabled True, size 3 ]
+            , pureControlGroup True "label"
+                <| textInput label []
+            , pureControlGroup True "definition"
+                <| textArea definition []
+            , pureControls
+                [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
+                , pureButton nodeSelected "Delete" (Form.Focus "Delete")
+                , pureButton nodeSelected "Update" (Form.Focus "Update")
+                , pureButton nodeSelected "Unselect" (Form.Focus "Unselect")
+                ]
             ]
-        ]
 
 
 edgeFormView : Bool -> Form () EdgeData -> Html Form.Msg
 edgeFormView edgeElected form =
-    pureForm "Edge"
-        [ pureControlGroup edgeElected "Selected edge"
-            <| textInput (Form.getFieldAsString "eid" form) [ disabled True, size 3 ]
-        , pureControlGroup True "from"
-            <| textInput (Form.getFieldAsString "from" form) [ size 3 ]
-        , pureControlGroup True "to"
-            <| textInput (Form.getFieldAsString "to" form) [ size 3 ]
-        , pureControlGroup True "label"
-            <| textInput (Form.getFieldAsString "label" form) [ placeholder "label" ]
-        , pureControlGroup True "definition"
-            <| textArea (Form.getFieldAsString "definition" form) [ placeholder "definition" ]
-        , pureControls
-            [ pureButton (not edgeElected) "Add" (Form.Focus "Add")
-            , pureButton edgeElected "Delete" (Form.Focus "Delete")
-            , pureButton edgeElected "Update" (Form.Focus "Update")
-            , pureButton edgeElected "Unselect" (Form.Focus "Unselect")
+    let
+        eid =
+            Form.getFieldAsString "eid" form
+
+        from =
+            Form.getFieldAsString "from" form
+
+        to =
+            Form.getFieldAsString "to" form
+
+        label =
+            Form.getFieldAsString "label" form
+
+        definition =
+            Form.getFieldAsString "definition" form
+
+        errorFor field =
+            case field.liveError of
+                Just error ->
+                    "Node with this ID doesn't exist"
+
+                Nothing ->
+                    ""
+    in
+        pureForm "Edge"
+            [ pureControlGroup edgeElected "Selected edge"
+                <| textInput eid [ disabled True, size 3 ]
+            , pureControlGroupWithError True
+                "from"
+                (textInput from [ size 3 ])
+                (errorFor from)
+            , pureControlGroupWithError True
+                "to"
+                (textInput to [ size 3 ])
+                (errorFor to)
+            , pureControlGroup True "label"
+                <| textInput label []
+            , pureControlGroup True "definition"
+                <| textArea definition []
+            , pureControls
+                [ pureButton (not edgeElected) "Add" (Form.Focus "Add")
+                , pureButton edgeElected "Delete" (Form.Focus "Delete")
+                , pureButton edgeElected "Update" (Form.Focus "Update")
+                , pureButton edgeElected "Unselect" (Form.Focus "Unselect")
+                ]
             ]
-        ]
 
 
 
@@ -143,15 +180,21 @@ pureButton visible label tagger =
         [ text label ]
 
 
-pureControlGroup : Bool -> String -> Html a -> Html a
-pureControlGroup visible fieldLabel fieldInput =
+pureControlGroupWithError : Bool -> String -> Html a -> String -> Html a
+pureControlGroupWithError visible fieldLabel fieldInput error =
     div
         [ visibility visible
         , class "pure-control-group"
         ]
         [ label [] [ text fieldLabel ]
         , fieldInput
+        , span [ style [ ( "color", "red" ) ] ] [ text error ]
         ]
+
+
+pureControlGroup : Bool -> String -> Html a -> Html a
+pureControlGroup visible fieldLabel fieldInput =
+    pureControlGroupWithError visible fieldLabel fieldInput ""
 
 
 visibility : Bool -> Attribute msg
