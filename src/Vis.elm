@@ -1,4 +1,18 @@
-port module Vis exposing (addNode, mkVisNode, addEdge, mkVisEdge, removeNode, removeEdge, nodeSelected, edgeSelected, unselectAll, EdgeId)
+port module Vis
+    exposing
+        ( mkVisNode
+        , addNode
+        , updateNode
+        , removeNode
+        , mkVisEdge
+        , addEdge
+        , updateEdge
+        , removeEdge
+        , nodeSelected
+        , edgeSelected
+        , unselectAll
+        , EdgeId
+        )
 
 import Graph
 
@@ -34,10 +48,16 @@ mkVisEdge =
 port addNode : VisNode -> Cmd msg
 
 
+port updateNode : VisNode -> Cmd msg
+
+
 port removeNode : Graph.NodeId -> Cmd msg
 
 
 port addEdge : VisEdge -> Cmd msg
+
+
+port updateEdge : VisEdge -> Cmd msg
 
 
 port removeEdge : EdgeId -> Cmd msg

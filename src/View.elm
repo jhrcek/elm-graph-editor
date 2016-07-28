@@ -109,7 +109,7 @@ nodeFormView nodeSelected form =
                 <| textArea definition []
             , pureControls
                 [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
-                , pureButton nodeSelected "Delete" (Form.Focus "Delete")
+                , pureButton nodeSelected "Remove" (Form.Focus "Remove")
                 , pureButton nodeSelected "Update" (Form.Focus "Update")
                 , pureButton nodeSelected "Unselect" (Form.Focus "Unselect")
                 ]
@@ -159,7 +159,7 @@ edgeFormView edgeElected form =
                 <| textArea definition []
             , pureControls
                 [ pureButton (not edgeElected) "Add" (Form.Focus "Add")
-                , pureButton edgeElected "Delete" (Form.Focus "Delete")
+                , pureButton edgeElected "Remove" (Form.Focus "Remove")
                 , pureButton edgeElected "Update" (Form.Focus "Update")
                 , pureButton edgeElected "Unselect" (Form.Focus "Unselect")
                 ]

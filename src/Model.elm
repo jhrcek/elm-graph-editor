@@ -26,8 +26,9 @@ type alias GraphEvents =
 type GraphEvent
     = AddNodeEvent NodeData
     | AddEdgeEvent EdgeData
-    | RemoveNodeEvent Int
-    | RemoveEdgeEvent Int
+    | RemoveNodeEvent G.NodeId
+    | RemoveEdgeEvent EdgeId
+    | UpdateNodeEvent G.NodeId
 
 
 type alias NodeData =
@@ -101,48 +102,44 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
         NodeFormMsg formMsg ->
             case ( formMsg, Form.getOutput nodeForm ) of
                 ( Form.Focus "Add", Just newNode ) ->
-                    let
-                        newGraph =
-                            addNode newNode graph
-
-                        newNodeUid =
-                            gens.nodeUid + 1
-                    in
+                    cleanForms
                         { model
-                            | graph = newGraph
-                            , nodeForm = initNodeForm newNodeUid "" ""
-                            , edgeForm = initEdgeForm gens.edgeUid "" "" "" "" newGraph
-                            , gens = IdGenerators newNodeUid gens.edgeUid (gens.eventUid + 1)
+                            | graph = addNode newNode graph
+                            , gens = IdGenerators (gens.nodeUid + 1) gens.edgeUid (gens.eventUid + 1)
                             , graphEvents = D.insert gens.eventUid (AddNodeEvent newNode) graphEvents
                         }
-                            ! [ Vis.addNode (Vis.mkVisNode newNode.nid newNode.label) ]
+                        ! [ Vis.addNode (Vis.mkVisNode newNode.nid newNode.label) ]
 
-                ( Form.Focus "Delete", _ ) ->
+                ( Form.Focus "Remove", _ ) ->
                     case selectedNode of
                         Nothing ->
                             model ! []
 
                         Just nid ->
-                            let
-                                newGraph =
-                                    G.remove nid graph
-                            in
+                            cleanForms
                                 { model
-                                    | graph = newGraph
-                                    , nodeForm = initNodeForm gens.nodeUid "" ""
-                                    , edgeForm = initEdgeForm gens.edgeUid "" "" "" "" newGraph
+                                    | graph = G.remove nid graph
                                     , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
                                     , graphEvents = D.insert gens.eventUid (RemoveNodeEvent nid) graphEvents
-                                    , selectedNode = Nothing
                                 }
-                                    ! [ Vis.removeNode nid ]
+                                ! [ Vis.removeNode nid ]
+
+                ( Form.Focus "Update", Just updatedNode ) ->
+                    case selectedNode of
+                        Nothing ->
+                            model ! []
+
+                        Just nid ->
+                            cleanForms
+                                { model
+                                    | graph = updateNode updatedNode graph
+                                    , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
+                                    , graphEvents = D.insert gens.eventUid (UpdateNodeEvent nid) graphEvents
+                                }
+                                ! [ Vis.updateNode (Vis.mkVisNode updatedNode.nid updatedNode.label) ]
 
                 ( Form.Focus "Unselect", _ ) ->
-                    { model
-                        | nodeForm = initNodeForm gens.nodeUid "" ""
-                        , selectedNode = Nothing
-                    }
-                        ! [ Vis.unselectAll ]
+                    cleanForms model ! [ Vis.unselectAll ]
 
                 _ ->
                     { model | nodeForm = Form.update formMsg nodeForm }
@@ -151,47 +148,30 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
         EdgeFormMsg formMsg ->
             case ( formMsg, Form.getOutput edgeForm ) of
                 ( Form.Focus "Add", Just newEdge ) ->
-                    let
-                        newGraph =
-                            addEdge newEdge graph
-
-                        newEdgeUid =
-                            gens.edgeUid + 1
-                    in
+                    cleanForms
                         { model
-                            | graph = newGraph
-                            , nodeForm = initNodeForm gens.nodeUid "" ""
-                            , edgeForm = initEdgeForm newEdgeUid "" "" "" "" newGraph
-                            , gens = IdGenerators gens.nodeUid newEdgeUid (gens.eventUid + 1)
+                            | graph = addEdge newEdge graph
+                            , gens = IdGenerators gens.nodeUid (gens.edgeUid + 1) (gens.eventUid + 1)
                             , graphEvents = D.insert gens.eventUid (AddEdgeEvent newEdge) graphEvents
                         }
-                            ! [ Vis.addEdge (Vis.mkVisEdge newEdge.eid newEdge.from newEdge.to newEdge.label) ]
+                        ! [ Vis.addEdge (Vis.mkVisEdge newEdge.eid newEdge.from newEdge.to newEdge.label) ]
 
-                ( Form.Focus "Delete", _ ) ->
+                ( Form.Focus "Remove", _ ) ->
                     case selectedEdge of
                         Nothing ->
                             model ! []
 
                         Just eid ->
-                            let
-                                newGraph =
-                                    removeEdge eid graph
-                            in
+                            cleanForms
                                 { model
-                                    | graph = newGraph
-                                    , edgeForm = initEdgeForm gens.edgeUid "" "" "" "" newGraph
+                                    | graph = removeEdge eid graph
                                     , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
                                     , graphEvents = D.insert gens.eventUid (RemoveEdgeEvent eid) graphEvents
-                                    , selectedEdge = Nothing
                                 }
-                                    ! [ Vis.removeEdge eid ]
+                                ! [ Vis.removeEdge eid ]
 
                 ( Form.Focus "Unselect", _ ) ->
-                    { model
-                        | edgeForm = initEdgeForm gens.edgeUid "" "" "" "" model.graph
-                        , selectedEdge = Nothing
-                    }
-                        ! [ Vis.unselectAll ]
+                    cleanForms model ! [ Vis.unselectAll ]
 
                 _ ->
                     { model | edgeForm = Form.update formMsg edgeForm }
@@ -233,12 +213,22 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
                     retrieveEdgeData (.definition << .label)
             in
                 { model
-                    | nodeForm = initNodeForm (gens.nodeUid + 1) "" ""
+                    | nodeForm = initNodeForm gens.nodeUid "" ""
                     , edgeForm = initEdgeForm eid fromStr toStr label definition model.graph
                     , selectedEdge = Just eid
                     , selectedNode = Nothing
                 }
                     ! []
+
+
+cleanForms : Model -> Model
+cleanForms m =
+    { m
+        | nodeForm = initNodeForm m.gens.nodeUid "" ""
+        , edgeForm = initEdgeForm m.gens.edgeUid "" "" "" "" m.graph
+        , selectedNode = Nothing
+        , selectedEdge = Nothing
+    }
 
 
 subscriptions : Model -> Sub Msg
@@ -254,12 +244,22 @@ subscriptions _ =
 
 
 addNode : NodeData -> Gr -> Gr
-addNode ({ nid, label, definition } as ndata) =
-    G.insert
-        { node = G.Node nid ndata
-        , incoming = IntDict.empty
-        , outgoing = IntDict.empty
-        }
+addNode ndata =
+    let
+        newNode =
+            -- store all data as G.Node's label
+            G.Node ndata.nid ndata
+    in
+        G.insert (G.NodeContext newNode IntDict.empty IntDict.empty)
+
+
+updateNode : NodeData -> Gr -> Gr
+updateNode ndata =
+    let
+        updatedNode =
+            (G.Node ndata.nid ndata)
+    in
+        G.update ndata.nid (Maybe.map (\oldCtx -> { oldCtx | node = updatedNode }))
 
 
 addEdge : EdgeData -> Gr -> Gr
@@ -268,10 +268,9 @@ addEdge ({ eid, from, to, label, definition } as edata) =
         insertOutgoingEdge : G.NodeId -> EdgeData -> Maybe (G.NodeContext NodeData EdgeData) -> Maybe (G.NodeContext NodeData EdgeData)
         insertOutgoingEdge toId edgeData =
             Maybe.map
-                (\{ incoming, node, outgoing } ->
-                    { node = node
-                    , incoming = incoming
-                    , outgoing = IntDict.insert toId edgeData outgoing
+                (\oldCtx ->
+                    { oldCtx
+                        | outgoing = IntDict.insert toId edgeData oldCtx.outgoing
                     }
                 )
     in
@@ -294,10 +293,9 @@ removeEdge eid gr =
         removeOutgoingEdge : G.NodeId -> Maybe (G.NodeContext NodeData EdgeData) -> Maybe (G.NodeContext NodeData EdgeData)
         removeOutgoingEdge toId =
             Maybe.map
-                (\{ incoming, node, outgoing } ->
-                    { node = node
-                    , incoming = incoming
-                    , outgoing = IntDict.remove toId outgoing
+                (\oldCtx ->
+                    { oldCtx
+                        | outgoing = IntDict.remove toId oldCtx.outgoing
                     }
                 )
     in
