@@ -29,6 +29,7 @@ type GraphEvent
     | RemoveNodeEvent G.NodeId
     | RemoveEdgeEvent EdgeId
     | UpdateNodeEvent G.NodeId
+    | UpdateEdgeEvent EdgeId
 
 
 type alias NodeData =
@@ -136,7 +137,9 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
                                     , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
                                     , graphEvents = D.insert gens.eventUid (UpdateNodeEvent nid) graphEvents
                                 }
-                                ! [ Vis.updateNode (Vis.mkVisNode updatedNode.nid updatedNode.label) ]
+                                ! [ Vis.updateNode (Vis.mkVisNode updatedNode.nid updatedNode.label)
+                                  , Vis.unselectAll
+                                  ]
 
                 ( Form.Focus "Unselect", _ ) ->
                     cleanForms model ! [ Vis.unselectAll ]
@@ -169,6 +172,24 @@ update msg ({ graph, graphEvents, gens, format, nodeForm, edgeForm, selectedNode
                                     , graphEvents = D.insert gens.eventUid (RemoveEdgeEvent eid) graphEvents
                                 }
                                 ! [ Vis.removeEdge eid ]
+
+                ( Form.Focus "Update", Just updatedEdge ) ->
+                    case selectedEdge of
+                        Nothing ->
+                            model ! []
+
+                        Just eid ->
+                            cleanForms
+                                { model
+                                    | graph =
+                                        -- simply re-add the updated edge
+                                        addEdge updatedEdge graph
+                                    , gens = IdGenerators gens.nodeUid gens.edgeUid (gens.eventUid + 1)
+                                    , graphEvents = D.insert gens.eventUid (UpdateEdgeEvent eid) graphEvents
+                                }
+                                ! [ Vis.updateEdge (Vis.mkVisEdge updatedEdge.eid updatedEdge.from updatedEdge.to updatedEdge.label)
+                                  , Vis.unselectAll
+                                  ]
 
                 ( Form.Focus "Unselect", _ ) ->
                     cleanForms model ! [ Vis.unselectAll ]
