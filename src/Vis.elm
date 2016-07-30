@@ -17,6 +17,9 @@ port module Vis
 import Graph
 
 
+-- Graph library has concept of NodeId, but not EdgeId
+
+
 type alias EdgeId =
     Int
 

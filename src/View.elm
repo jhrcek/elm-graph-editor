@@ -4,7 +4,6 @@ import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
 import Html.Events as E
-import Dict
 import Model exposing (..)
 import GraphFormatter
 import Model exposing (..)
@@ -29,7 +28,6 @@ view m =
                 ]
             ]
           --, modelDebug m
-        , graphEventsView m.graphEvents
         ]
 
 
@@ -76,16 +74,6 @@ formatSelectionRadios =
 modelDebug : Model -> Html Msg
 modelDebug m =
     div [] [ text <| toString m ]
-
-
-graphEventsView : GraphEvents -> Html Msg
-graphEventsView events =
-    div []
-        [ h2 [] [ text "Graph events" ]
-        , ul []
-            <| List.map (\( id, event ) -> li [] [ text (toString id ++ " : " ++ toString event) ])
-            <| Dict.toList events
-        ]
 
 
 nodeFormView : Bool -> Form () NodeData -> Html Form.Msg
