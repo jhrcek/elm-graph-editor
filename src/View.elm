@@ -1,14 +1,14 @@
 module View exposing (view)
 
+import Form exposing (Form)
+import Form.Input exposing (..)
 import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
 import Html.Events as E
-import Model exposing (..)
+import Http exposing (uriEncode)
 import GraphFormatter
 import Model exposing (..)
-import Form exposing (Form)
-import Form.Input exposing (..)
 
 
 view : Model -> Html Msg
@@ -41,17 +41,31 @@ inputForm m =
 
 graphData : Model -> Html Msg
 graphData { format, graph } =
-    div []
-        [ h3 [] [ text "Graph data" ]
-        , formatSelectionRadios
-        , textarea
-            [ value <| GraphFormatter.formatGraph format graph
-            , rows 12
-            , cols 50
-            , readonly True
+    let
+        graphData =
+            GraphFormatter.formatGraph format graph
+
+        fileExtension =
+            GraphFormatter.getDefaultFileExtension format
+    in
+        div []
+            [ h3 [] [ text "Graph data" ]
+            , formatSelectionRadios
+            , textarea
+                [ value graphData
+                , rows 12
+                , cols 50
+                , readonly True
+                ]
+                []
+            , div []
+                [ a
+                    [ href <| "data:text/plain;charset=utf-8," ++ uriEncode graphData
+                    , downloadAs <| "graph." ++ fileExtension
+                    ]
+                    [ button [ class "pure-button" ] [ text "Download" ] ]
+                ]
             ]
-            []
-        ]
 
 
 formatSelectionRadios : Html Msg

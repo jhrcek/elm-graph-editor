@@ -1,4 +1,4 @@
-module GraphFormatter exposing (formatGraph)
+module GraphFormatter exposing (formatGraph, getDefaultFileExtension)
 
 import Graph
 import List
@@ -17,6 +17,19 @@ formatGraph format graph =
 
         Tgf ->
             toTgf graph
+
+
+getDefaultFileExtension : Format -> String
+getDefaultFileExtension f =
+    case f of
+        ElmGraph ->
+            "elmgraph"
+
+        Dot ->
+            "dot"
+
+        Tgf ->
+            "tgf"
 
 
 toTgf : Gr -> String
