@@ -16,6 +16,8 @@ A simple browser-based graph editor written in [Elm](http://elm-lang.org/). It u
     - [x] [dot](http://www.graphviz.org/content/dot-language) format that can be used by [graphviz](http://graphviz.org/)
     - [x] [tgf](https://en.wikipedia.org/wiki/Trivial_Graph_Format) format that can be imported by tools like [gephi](https://gephi.org/) or [yed](https://www.yworks.com/products/yed)
     - [x] String based representation suitable for [fromNodesAndEdges](http://package.elm-lang.org/packages/elm-community/graph/1.0.0/Graph#fromNodesAndEdges) function of elm-community/elm-graph library
-- [x] Implement update functionality for nodes and edges
+- [x] Update functionality for nodes and edges
+- [x] Graph file download
+- [ ] Several demo graphs users can play with
 - [ ] Unselecting everything (i.e. clicking background) should clean node/edge forms
 - [ ] Simpler way to create edges using drag & drop interactions via vis' canvas
