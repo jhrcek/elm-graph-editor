@@ -14,27 +14,17 @@ import Model exposing (..)
 view : Model -> Html Msg
 view m =
     div []
-        [ div []
-            [ h1 [] [ text "Graph editor" ]
-            , table []
-                [ tr []
-                    [ td [ class "bordered" ]
-                        [ inputForm m ]
-                    , td [ class "bordered", id "vis-container" ]
-                        []
-                    , td [ class "bordered", style [ ( "vertical-align", "top" ), ( "padding", "20px" ) ] ]
-                        [ graphData m ]
-                    ]
-                ]
-            ]
-          --, modelDebug m
+        [ inputForm m
+        , graphData m
+        , visContainer
         ]
 
 
 inputForm : Model -> Html Msg
 inputForm m =
-    div []
-        [ Html.App.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
+    div [ class "left controls-panel" ]
+        [ h3 [] [ text "Edit graph" ]
+        , Html.App.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
         , Html.App.map EdgeFormMsg <| edgeFormView (m.selectedEdge /= Nothing) m.edgeForm
         ]
 
@@ -48,12 +38,12 @@ graphData { format, graph } =
         fileExtension =
             GraphFormatter.getDefaultFileExtension format
     in
-        div []
+        div [ class "right controls-panel" ]
             [ h3 [] [ text "Graph data" ]
             , formatSelectionRadios
             , textarea
                 [ value graphData
-                , rows 12
+                , rows 23
                 , cols 50
                 , readonly True
                 ]
@@ -63,9 +53,15 @@ graphData { format, graph } =
                     [ href <| "data:text/plain;charset=utf-8," ++ uriEncode graphData
                     , downloadAs <| "graph." ++ fileExtension
                     ]
-                    [ button [ class "pure-button" ] [ text "Download" ] ]
+                    [ button [ class "pure-button pure-button-primary" ] [ text "Download" ] ]
                 ]
             ]
+
+
+visContainer : Html Msg
+visContainer =
+    div [ class "fullscreen", id "vis-container" ]
+        []
 
 
 formatSelectionRadios : Html Msg
@@ -79,15 +75,10 @@ formatSelectionRadios =
     in
         div []
             [ text "Format: "
-            , radio "elm-graph" True ElmGraph
-            , radio "dot" False Dot
-            , radio "tgf" False Tgf
+            , radio " elm-graph " True ElmGraph
+            , radio " dot " False Dot
+            , radio " tgf " False Tgf
             ]
-
-
-modelDebug : Model -> Html Msg
-modelDebug m =
-    div [] [ text <| toString m ]
 
 
 nodeFormView : Bool -> Form () NodeData -> Html Form.Msg
@@ -176,7 +167,7 @@ pureButton : Bool -> String -> a -> Html a
 pureButton visible label tagger =
     button
         [ visibility visible
-        , class "pure-button"
+        , class "pure-button pure-button-primary"
         , E.onClick tagger
         ]
         [ text label ]
