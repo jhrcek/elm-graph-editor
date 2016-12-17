@@ -6,8 +6,8 @@ import IntDict
 import Vis exposing (..)
 import Form exposing (Form, Msg(Submit))
 import Form.Field as Field
-import Form.Error exposing (Error(NotIncludedIn))
-import Form.Validate exposing (Validation, get, oneOf, string, emptyString, int, form3, form5, customValidation)
+import Form.Error as Error
+import Form.Validate exposing (Validation, field, oneOf, string, emptyString, int, map3, map5, customValidation)
 
 
 type alias Gr =
@@ -292,9 +292,9 @@ removeEdge eid gr =
 initNodeForm : G.NodeId -> String -> String -> Form () NodeData
 initNodeForm nid label definition =
     Form.initial
-        [ ( "nid", Field.Text (toString nid) )
-        , ( "label", Field.Text label )
-        , ( "definition", Field.Text definition )
+        [ ( "nid", Field.string (toString nid) )
+        , ( "label", Field.string label )
+        , ( "definition", Field.string definition )
         ]
         validateAddNode
 
@@ -302,21 +302,21 @@ initNodeForm nid label definition =
 initEdgeForm : EdgeId -> String -> String -> String -> String -> Gr -> Form () EdgeData
 initEdgeForm eid from to label definition graph =
     Form.initial
-        [ ( "eid", Field.Text (toString eid) )
-        , ( "from", Field.Text from )
-        , ( "to", Field.Text to )
-        , ( "label", Field.Text label )
-        , ( "definition", Field.Text definition )
+        [ ( "eid", Field.string (toString eid) )
+        , ( "from", Field.string from )
+        , ( "to", Field.string to )
+        , ( "label", Field.string label )
+        , ( "definition", Field.string definition )
         ]
         (validateAddEdge graph)
 
 
 validateAddNode : Validation () NodeData
 validateAddNode =
-    form3 NodeData
-        (get "nid" int)
-        (get "label" anyString)
-        (get "definition" anyString)
+    map3 NodeData
+        (field "nid" int)
+        (field "label" anyString)
+        (field "definition" anyString)
 
 
 validateAddEdge : Gr -> Validation () EdgeData
@@ -329,15 +329,15 @@ validateAddEdge graph =
                         Ok id
                     else
                         --TODO custom error
-                        Err NotIncludedIn
+                        Err (Error.value Error.NotIncludedIn)
                 )
     in
-        form5 EdgeData
-            (get "eid" int)
-            (get "from" nodeIdExistsInGraph)
-            (get "to" nodeIdExistsInGraph)
-            (get "label" anyString)
-            (get "definition" anyString)
+        map5 EdgeData
+            (field "eid" int)
+            (field "from" nodeIdExistsInGraph)
+            (field "to" nodeIdExistsInGraph)
+            (field "label" anyString)
+            (field "definition" anyString)
 
 
 anyString : Validation a String

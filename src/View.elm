@@ -3,10 +3,10 @@ module View exposing (view)
 import Form exposing (Form)
 import Form.Input exposing (..)
 import Html exposing (..)
-import Html.App
+import Html
 import Html.Attributes exposing (..)
 import Html.Events as E
-import Http exposing (uriEncode)
+import Http
 import GraphFormatter
 import Model exposing (..)
 
@@ -24,8 +24,8 @@ inputForm : Model -> Html Msg
 inputForm m =
     div [ class "left controls-panel" ]
         [ h3 [] [ text "Edit graph" ]
-        , Html.App.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
-        , Html.App.map EdgeFormMsg <| edgeFormView (m.selectedEdge /= Nothing) m.edgeForm
+        , Html.map NodeFormMsg <| nodeFormView (m.selectedNode /= Nothing) m.nodeForm
+        , Html.map EdgeFormMsg <| edgeFormView (m.selectedEdge /= Nothing) m.edgeForm
         ]
 
 
@@ -50,7 +50,7 @@ graphData { format, graph } =
                 []
             , div []
                 [ a
-                    [ href <| "data:text/plain;charset=utf-8," ++ uriEncode graphData
+                    [ href <| "data:text/plain;charset=utf-8," ++ Http.encodeUri graphData
                     , downloadAs <| "graph." ++ fileExtension
                     ]
                     [ button [ class "pure-button pure-button-primary" ] [ text "Download" ] ]
@@ -69,7 +69,7 @@ formatSelectionRadios =
     let
         radio txt isChecked format =
             label []
-                [ input [ type' "radio", name "format", checked isChecked, E.onCheck (\_ -> ChangeFormat format) ] []
+                [ input [ type_ "radio", name "format", checked isChecked, E.onCheck (\_ -> ChangeFormat format) ] []
                 , text txt
                 ]
     in
@@ -94,12 +94,12 @@ nodeFormView nodeSelected form =
             Form.getFieldAsString "definition" form
     in
         pureForm "Node"
-            [ pureControlGroup nodeSelected "Selected node"
-                <| textInput nid [ disabled True, size 3 ]
-            , pureControlGroup True "label"
-                <| textInput label []
-            , pureControlGroup True "definition"
-                <| textArea definition []
+            [ pureControlGroup nodeSelected "Selected node" <|
+                textInput nid [ disabled True, size 3 ]
+            , pureControlGroup True "label" <|
+                textInput label []
+            , pureControlGroup True "definition" <|
+                textArea definition []
             , pureControls
                 [ pureButton (not nodeSelected) "Add" (Form.Focus "Add")
                 , pureButton nodeSelected "Remove" (Form.Focus "Remove")
@@ -136,8 +136,8 @@ edgeFormView edgeElected form =
                     ""
     in
         pureForm "Edge"
-            [ pureControlGroup edgeElected "Selected edge"
-                <| textInput eid [ disabled True, size 3 ]
+            [ pureControlGroup edgeElected "Selected edge" <|
+                textInput eid [ disabled True, size 3 ]
             , pureControlGroupWithError True
                 "from"
                 (textInput from [ size 3 ])
@@ -146,10 +146,10 @@ edgeFormView edgeElected form =
                 "to"
                 (textInput to [ size 3 ])
                 (errorFor to)
-            , pureControlGroup True "label"
-                <| textInput label []
-            , pureControlGroup True "definition"
-                <| textArea definition []
+            , pureControlGroup True "label" <|
+                textInput label []
+            , pureControlGroup True "definition" <|
+                textArea definition []
             , pureControls
                 [ pureButton (not edgeElected) "Add" (Form.Focus "Add")
                 , pureButton edgeElected "Remove" (Form.Focus "Remove")

@@ -48,7 +48,7 @@ toTgf g =
 
 toElmGraph : Gr -> String
 toElmGraph =
-    Graph.toString'
+    Graph.toString
 
 
 toDot : Gr -> String
