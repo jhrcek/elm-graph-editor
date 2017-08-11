@@ -1,8 +1,13 @@
-# Elm Graph editor
+# Superseded by [graph-editor](https://github.com/jhrcek/graph-editor) 
+
+This project was my initial attempt to implement graph editor in elm.
+I'm not very happy with the result, especially because I couldn't control the graph canvas from Elm.
+
+## Elm Graph editor
 
 A simple browser-based graph editor written in [Elm](http://elm-lang.org/). It uses [vis.js](http://visjs.org/) library for graph visualization and layout.
 
-## How to build it
+### How to build it
 
 1. [Install Elm](http://elm-lang.org/install)
 2. Clone this repository: `git clone git@github.com:jhrcek/elm-graph-editor.git`
@@ -10,7 +15,7 @@ A simple browser-based graph editor written in [Elm](http://elm-lang.org/). It u
 4. `./build.sh`
 5. Open the file `index.html` in your browser
 
-## TODOs
+### TODOs
 
 - [x] Generate simple graph source code in several formats, in particular
     - [x] [dot](http://www.graphviz.org/content/dot-language) format that can be used by [graphviz](http://graphviz.org/)
